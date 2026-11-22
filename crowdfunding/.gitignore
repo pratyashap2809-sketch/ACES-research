@@ -1,0 +1,4 @@
+results/_*
+results/*.sqlite
+__pycache__/
+*.pyc
