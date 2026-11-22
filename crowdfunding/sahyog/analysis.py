@@ -127,7 +127,7 @@ def analyse_exp1(rows):
     out = []
     by_story = []
     for m in models:
-        mr = [r for r in rows if r["model"] == m]
+        mr = [r for r in rows if r["model"] == m and not r.get("error")]  # connection errors were retried
         valid = [r for r in mr if r.get("valid")]
         ctrl = [r for r in valid if r["scenario"] == "control"]
         kc, nc = sum(r["decision"] == "donate" for r in ctrl), len(ctrl)
@@ -288,7 +288,7 @@ def analyse_exp2(rows):
     models = model_order(rows)
     coefs, positions, meta = [], [], []
     for m in models:
-        mr = [r for r in rows if r["model"] == m]
+        mr = [r for r in rows if r["model"] == m and not r.get("error")]
         valid = [r for r in mr if r.get("valid") and r.get("choice") is not None]
         if not valid:
             continue

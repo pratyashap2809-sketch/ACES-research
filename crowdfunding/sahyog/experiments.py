@@ -43,6 +43,8 @@ def _done_keys(path, key_fields):
             for line in f:
                 try:
                     r = json.loads(line)
+                    if r.get("error"):
+                        continue  # failed trials are retried on the next run
                     done.add(tuple(r[k] for k in key_fields))
                 except Exception:
                     pass
@@ -99,6 +101,7 @@ def run_exp1(models, out_dir, reps, control_reps, stories=None, temperature=0.8,
         todo = [p for p in plan if (backend.name, p[0], p[3], p[4]) not in done]
         random.Random(stable_seed("order", model)).shuffle(todo)  # interleave conditions over time
         prog = Progress(len(todo), f"Exp1 {backend.name}")
+        streak = 0
         with open(path, "a") as f:
             for key, label, spec, sid, r in todo:
                 seed = stable_seed("exp1", backend.name, key, sid, r)
@@ -115,6 +118,10 @@ def run_exp1(models, out_dir, reps, control_reps, stories=None, temperature=0.8,
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
                 f.flush()
                 prog.step(f"{key} · {sid} · {res.get('decision')}")
+                streak = streak + 1 if err else 0
+                if streak >= 3:
+                    raise SystemExit(f"\nStopped: 3 errors in a row ({err}). Is Ollama running and is {backend.name} installed? "
+                                     "Fix it and run the same command again; it resumes where it stopped.")
         prog.done()
     if httpd:
         httpd.shutdown()
@@ -163,6 +170,7 @@ def run_exp2(models, out_dir, trials, temperature=0.8, base_url=None, act=True):
         backend = agent.make_backend(model, temperature)
         todo = [t for t in range(trials) if (backend.name, t) not in done]
         prog = Progress(len(todo), f"Exp2 {backend.name}")
+        streak = 0
         with open(path, "a") as f:
             for t in todo:
                 rnd = random.Random(stable_seed("exp2-design", t))  # same pages for every model
@@ -183,6 +191,10 @@ def run_exp2(models, out_dir, trials, temperature=0.8, base_url=None, act=True):
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
                 f.flush()
                 prog.step(f"trial {t} · chose {res.get('choice')}")
+                streak = streak + 1 if err else 0
+                if streak >= 3:
+                    raise SystemExit(f"\nStopped: 3 errors in a row ({err}). Is Ollama running and is {backend.name} installed? "
+                                     "Fix it and run the same command again; it resumes where it stopped.")
         prog.done()
     if httpd:
         httpd.shutdown()

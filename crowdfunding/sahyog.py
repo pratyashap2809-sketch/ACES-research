@@ -88,7 +88,11 @@ def cmd_check(args):
 def lab_runner(token, story, model, base):
     b = agent.OllamaBackend(model)
     t0 = time.time()
-    r = agent.run_single(base, f"/fundraiser/{story}?t={token}", b, act=True)
+    try:
+        r = agent.run_single(base, f"/fundraiser/{story}?t={token}", b, act=True)
+    except OSError as e:
+        raise RuntimeError(f"Cannot reach Ollama at 127.0.0.1:11434 ({e}). Open the Ollama app, check that "
+                           f"`ollama pull {model}` has been done, and try again.")
     return {"decision": r["decision"], "amount": r["amount"], "probability": r["probability"],
             "reason": r["reason"], "model": model, "seconds": round(time.time() - t0, 1)}
 
