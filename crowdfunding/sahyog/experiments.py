@@ -1,9 +1,12 @@
 """Experiment designs and the runner.
 
-Experiment 1 (scenario table, "A/B tests"):
-    The agent sees ONE fundraiser page and decides donate/skip + amount + a stated probability.
-    Each scenario changes ONE factor from the control page. Every scenario is run on all four
-    stories, several repetitions each, so a result is never tied to one particular story.
+Experiment 1 (scenario table, paired A/B choice):
+    The agent opens TWO fundraiser pages and can fund only one. One is the "target" story with
+    ONE factor changed from the control page; the other is a different story left at the control
+    page (the rival). P(fund) = how often the target is chosen. Each scenario runs on all four
+    target stories against each of the other three rivals, with A/B positions balanced.
+    (A pilot with one page and a yes/no answer was abandoned: Llama 3.2 said "donate" to 50/50
+    pages, a ceiling that hides every effect. See results/pilot_single_page.)
 
 Experiment 2 (marketplace choice, like ACES):
     The agent sees the homepage with four fundraiser cards and picks ONE to give Rs 2,000 to.
@@ -26,8 +29,8 @@ from . import agent, content, site
 PRESETS = {
     #            reps per scenario x story, control reps per story, market trials
     "quick":    {"reps": 1, "control_reps": 3, "market_trials": 20},
-    "standard": {"reps": 5, "control_reps": 15, "market_trials": 100},
-    "full":     {"reps": 10, "control_reps": 30, "market_trials": 300},
+    "standard": {"reps": 3, "control_reps": 9, "market_trials": 100},
+    "full":     {"reps": 6, "control_reps": 18, "market_trials": 300},
 }
 
 
@@ -86,6 +89,16 @@ def exp1_plan(reps, control_reps, stories):
     return plan
 
 
+def pair_setup(key, spec, sid, r):
+    """Which rival story, and is the target shown as A? Balanced by design, not by chance."""
+    others = [x for x in content.STORY_IDS if x != sid]
+    rival = others[r % len(others)]
+    # with reps in multiples of 3, every target meets every rival equally often, and
+    # A/B positions are balanced across stories (and, with 6 reps, within each story-rival pair)
+    target_first = (r + content.STORY_IDS.index(sid) + r // 3) % 2 == 0
+    return rival, target_first
+
+
 def run_exp1(models, out_dir, reps, control_reps, stories=None, temperature=0.8, base_url=None, act=True):
     stories = stories or content.STORY_IDS
     os.makedirs(out_dir, exist_ok=True)
@@ -105,19 +118,30 @@ def run_exp1(models, out_dir, reps, control_reps, stories=None, temperature=0.8,
         with open(path, "a") as f:
             for key, label, spec, sid, r in todo:
                 seed = stable_seed("exp1", backend.name, key, sid, r)
-                reg = agent.http_post_json(base_url + "/api/trials", {"kind": "single", "story": sid, "spec": spec})
+                rival, target_first = pair_setup(key, spec, sid, r)
+                t = agent.http_post_json(base_url + "/api/trials", {"kind": "single", "story": sid, "spec": spec})
+                v = agent.http_post_json(base_url + "/api/trials", {"kind": "single", "story": rival, "spec": content.CONTROL})
+                url_a, url_b = (t["url"], v["url"]) if target_first else (v["url"], t["url"])
                 try:
-                    res = agent.run_single(base_url, reg["url"], backend, seed=seed, act=act)
+                    res = agent.run_pair(base_url, url_a, url_b, backend, seed=seed, act=act)
                     err = None
                 except Exception as e:
-                    res, err = {"decision": "error", "valid": False}, str(e)[:300]
+                    res, err = {"choice": "error", "valid": False}, str(e)[:300]
+                chose_target = res.get("valid") and ((res["choice"] == "A") == target_first)
+                conf = res.get("confidence")
+                derived = {
+                    "decision": ("donate" if chose_target else "skip") if res.get("valid") else "invalid",
+                    "probability": round(conf if chose_target else 1 - conf, 3) if (res.get("valid") and conf is not None) else None,
+                    "amount": 2000 if chose_target else 0,
+                }
                 factor = key.split("=")[0] if "=" in key else "control"
-                row = {"exp": 1, "model": backend.name, "backend": backend.kind, "scenario": key, "label": label,
-                       "factor": factor, "story": sid, "rep": r, "seed": seed, "temperature": temperature,
-                       "spec": spec, "ts": time.time(), "error": err, **res}
+                row = {"exp": 1, "design": "pair-v1", "model": backend.name, "backend": backend.kind, "scenario": key,
+                       "label": label, "factor": factor, "story": sid, "rival": rival, "target_first": target_first,
+                       "rep": r, "seed": seed, "temperature": temperature, "spec": spec, "ts": time.time(),
+                       "error": err, **res, **derived}
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
                 f.flush()
-                prog.step(f"{key} · {sid} · {res.get('decision')}")
+                prog.step(f"{key} · {sid} vs {rival} · {'target' if chose_target else 'rival'}")
                 streak = streak + 1 if err else 0
                 if streak >= 3:
                     raise SystemExit(f"\nStopped: 3 errors in a row ({err}). Is Ollama running and is {backend.name} installed? "
@@ -206,7 +230,7 @@ def run_exp2(models, out_dir, trials, temperature=0.8, base_url=None, act=True):
 # ---------------------------------------------------------------------------
 
 def notebooklm_export(out_dir, scenarios=None, reps=1):
-    """Write the exact prompts the agent would send, for pasting into NotebookLM by hand."""
+    """Write the exact two-fundraiser prompts the agent would send, for pasting into NotebookLM by hand."""
     import csv
     os.makedirs(out_dir, exist_ok=True)
     httpd, base = start_site(os.path.join(out_dir, "donations.sqlite"))
@@ -215,11 +239,15 @@ def notebooklm_export(out_dir, scenarios=None, reps=1):
     for key, label, spec, sid, r in exp1_plan(reps, reps, content.STORY_IDS):
         if keep and key not in keep:
             continue
-        reg = agent.http_post_json(base + "/api/trials", {"kind": "single", "story": sid, "spec": spec})
-        page = agent.read_page(agent.http_get(base + reg["url"]))
-        prompt = agent.SYSTEM_PROMPT + "\n\n" + agent.SINGLE_TASK.format(page=page)
-        rows.append({"id": f"{key}|{sid}|{r}", "scenario": key, "label": label, "story": sid, "rep": r,
-                     "prompt": prompt, "notebooklm_reply": ""})
+        rival, target_first = pair_setup(key, spec, sid, r)
+        t = agent.http_post_json(base + "/api/trials", {"kind": "single", "story": sid, "spec": spec})
+        v = agent.http_post_json(base + "/api/trials", {"kind": "single", "story": rival, "spec": content.CONTROL})
+        pt = agent.read_page(agent.http_get(base + t["url"]))
+        pv = agent.read_page(agent.http_get(base + v["url"]))
+        pa, pb = (pt, pv) if target_first else (pv, pt)
+        prompt = agent.SYSTEM_PROMPT + "\n\n" + agent.pair_prompt(pa, pb)
+        rows.append({"id": f"{key}|{sid}|{r}", "scenario": key, "label": label, "story": sid, "rival": rival,
+                     "target_first": target_first, "rep": r, "prompt": prompt, "notebooklm_reply": ""})
     httpd.shutdown()
     path = os.path.join(out_dir, "notebooklm_prompts.csv")
     with open(path, "w", newline="") as f:
@@ -239,13 +267,19 @@ def notebooklm_import(csv_path, out_dir):
         for row in csv.DictReader(f):
             if not row.get("notebooklm_reply", "").strip():
                 continue
-            d = agent.parse_single(row["notebooklm_reply"])
+            d = agent.parse_pair(row["notebooklm_reply"])
+            target_first = row["target_first"] in ("True", "true", "1")
+            chose_target = d["valid"] and ((d["choice"] == "A") == target_first)
+            conf = d["confidence"]
             key = row["scenario"]
-            out.write(json.dumps({"exp": 1, "model": "notebooklm", "backend": "notebooklm-manual",
+            out.write(json.dumps({"exp": 1, "design": "pair-v1", "model": "notebooklm", "backend": "notebooklm-manual",
                                   "scenario": key, "label": scen[key][0],
                                   "factor": key.split("=")[0] if "=" in key else "control",
-                                  "story": row["story"], "rep": int(row["rep"]), "spec": scen[key][1],
-                                  "ts": time.time(), "error": None, **d, "raw": row["notebooklm_reply"]},
+                                  "story": row["story"], "rival": row["rival"], "target_first": target_first,
+                                  "rep": int(row["rep"]), "spec": scen[key][1], "ts": time.time(), "error": None, **d,
+                                  "decision": ("donate" if chose_target else "skip") if d["valid"] else "invalid",
+                                  "probability": (conf if chose_target else 1 - conf) if (d["valid"] and conf is not None) else None,
+                                  "amount": 2000 if chose_target else 0, "raw": row["notebooklm_reply"]},
                                  ensure_ascii=False) + "\n")
             n += 1
     return n

@@ -80,7 +80,7 @@ def cmd_check(args):
     n_scen = len(content.scenario_list()) - 1
     for name, p in experiments.PRESETS.items():
         calls1 = (n_scen * p["reps"] + p["control_reps"]) * len(content.STORY_IDS)
-        total = sum(t * calls1 + t * 1.6 * p["market_trials"] for t in times.values())
+        total = sum(t * 1.4 * calls1 + t * 1.6 * p["market_trials"] for t in times.values())  # pairs ~1.4x one page
         print(f"   {name:9s} {calls1} + {p['market_trials']} decisions per model  ~ {total / 60:.0f} min")
     return 0
 

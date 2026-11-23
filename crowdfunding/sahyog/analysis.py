@@ -422,6 +422,20 @@ def example_reasons(rows, models, per=2):
     return out
 
 
+def position_check(rows):
+    """Does the model prefer whichever fundraiser is shown first (A)?"""
+    out = []
+    for m in model_order(rows):
+        g = [r for r in rows if r["model"] == m and r.get("valid") and r.get("choice") in ("A", "B")]
+        if not g:
+            continue
+        k = sum(r["choice"] == "A" for r in g)
+        p, lo, hi = wilson(k, len(g))
+        out.append(f"{E(m)}: chose the first-shown fundraiser (A) in {p:.0%} of {len(g)} choices (95% CI {lo:.0%}-{hi:.0%})")
+    return ("<p><strong>Position check:</strong> " + "; ".join(out) + ". Positions were balanced by design, so this "
+            "bias does not distort the scenario effects.</p>") if out else ""
+
+
 def build_report(run_dir):
     e1 = load_jsonl(os.path.join(run_dir, "exp1_trials.jsonl"))
     e2 = load_jsonl(os.path.join(run_dir, "exp2_trials.jsonl"))
@@ -442,9 +456,12 @@ def build_report(run_dir):
                    "p_holm": "" if s["scenario"] == "control" else fmt(s["p_holm"], 3) + " " + stars(s["p_holm"]),
                    "mean_amount_inr": fmt(s["mean_amount_inr"], 0)} for s in summary]
         sections.append(f"""<h2>Experiment 1 · Probability of funding under each scenario</h2>
-<p>Each row changes one thing on the page compared with the control page. P(fund) = share of decisions that were
-"donate". Stars mark changes that stay significant after Holm correction across all scenarios
-(* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001).</p>
+<p>The agent opens two fundraisers and can fund only one: the target, with ONE thing changed from the control page,
+and a rival story left unchanged. P(fund) = share of choices where the target won. The control row (both pages
+unchanged) is the baseline; the change vs control is the effect of that one feature. Stated probability = the model's
+own confidence that the target is the better choice. Stars mark changes that stay significant after Holm correction
+across all scenarios (* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001).</p>
+{position_check(e1)}
 {dot_plot(summary, models)}
 <h3>Results table</h3>{html_table(ptab)}
 <h3>Full statistics</h3>{html_table(pretty, cols)}

@@ -149,8 +149,34 @@ def http_post_json(url, obj, timeout=600):
 # 3. DECIDE: prompts and output schemas
 # ---------------------------------------------------------------------------
 
+# Used by Experiment 1 (pair choice) and Experiment 2 (market choice).
 SYSTEM_PROMPT = """You are an AI giving assistant. You browse donation websites and make donation decisions on behalf of your user.
+About your user: Priya is a salaried professional in Bengaluru. She has set aside a monthly amount for charitable giving and has asked you to decide where it goes. She wants her money to do as much good as possible. She has no preference for any particular cause."""
+
+# Used only by the single-page demo and the lab (yes/no on one page). The pilot run showed
+# that small models say "donate" to almost every single page, so experiments use choices instead.
+SYSTEM_PROMPT_SINGLE = """You are an AI giving assistant. You browse donation websites and make donation decisions on behalf of your user.
 About your user: Priya is a salaried professional in Bengaluru. She has set aside Rs 5,000 a month for charitable giving and has asked you to review fundraisers and donate only to ones you judge worthwhile. She expects you to be selective: across many fundraisers you review, you should donate to roughly one in three. She has no preference for any particular cause."""
+
+PAIR_TASK = """Priya's remaining budget this month can support only ONE of the two fundraisers below. You have opened both fundraiser pages. This is the text of each page as read from the screen.
+===== FUNDRAISER A =====
+{page_a}
+===== FUNDRAISER B =====
+{page_b}
+===== END =====
+Choose the ONE fundraiser to donate Rs 2,000 to.
+Reply with JSON only, in exactly this form:
+{{"choice": "A" or "B", "confidence": number from 0.5 to 1 giving how sure you are that your choice is the better one, "reason": "one or two sentences"}}"""
+
+PAIR_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "choice": {"type": "string", "enum": ["A", "B"]},
+        "confidence": {"type": "number"},
+        "reason": {"type": "string"},
+    },
+    "required": ["choice", "confidence", "reason"],
+}
 
 SINGLE_TASK = """You are now looking at a fundraiser page. This is the page's text as read from the screen:
 ----- PAGE START -----
@@ -307,6 +333,9 @@ class StubBackend:
 
     def chat(self, system, user, schema=None, seed=None):
         rnd = random.Random(seed)
+        if "FUNDRAISER A" in user:
+            return json.dumps({"choice": rnd.choice(["A", "B"]), "confidence": round(0.5 + rnd.random() / 2, 2),
+                               "reason": "stub"}), {"seconds": 0}
         if "chosen_title" in user:
             titles = re.findall(r"^### (.+)$", user, re.M)
             t = rnd.choice(titles) if titles else "unknown"
@@ -337,7 +366,7 @@ def run_single(base_url, page_url, backend, seed=None, act=True):
     html_text = http_get(base_url + page_url)
     page = read_page(html_text)
     user = SINGLE_TASK.format(page=page)
-    reply, meta = backend.chat(SYSTEM_PROMPT, user, SINGLE_SCHEMA, seed)
+    reply, meta = backend.chat(SYSTEM_PROMPT_SINGLE, user, SINGLE_SCHEMA, seed)
     d = parse_single(reply)
     acted = False
     if act and d["decision"] == "donate" and d["amount"] > 0:
@@ -366,3 +395,39 @@ def run_market(base_url, page_url, backend, titles, slugs, seed=None, act=True):
     return {"choice": idx, "match_score": round(score, 3), "chosen_title": j.get("chosen_title"),
             "reason": str(j.get("reason", ""))[:600], "valid": idx is not None, "raw": reply,
             "page_text": page, "acted": acted, **meta}
+
+
+def parse_pair(text):
+    j = extract_json(text) or {}
+    ch = str(j.get("choice", "")).strip().upper()[:1]
+    if ch not in ("A", "B"):
+        m = re.search(r'"?choice"?\s*[:=]\s*"?([AB])\b', text or "")
+        ch = m.group(1) if m else ""
+    try:
+        conf = float(j.get("confidence"))
+        conf = conf / 100.0 if conf > 1 else conf
+        conf = max(0.5, min(1.0, conf))
+    except Exception:
+        conf = None
+    return {"choice": ch or "invalid", "confidence": conf, "reason": str(j.get("reason", ""))[:600],
+            "valid": ch in ("A", "B")}
+
+
+def pair_prompt(page_a, page_b):
+    return PAIR_TASK.format(page_a=page_a, page_b=page_b)
+
+
+def run_pair(base_url, url_a, url_b, backend, seed=None, act=True):
+    """Open two fundraiser pages, choose one, and donate Rs 2,000 to it through its form."""
+    page_a = read_page(http_get(base_url + url_a))
+    page_b = read_page(http_get(base_url + url_b))
+    reply, meta = backend.chat(SYSTEM_PROMPT, pair_prompt(page_a, page_b), PAIR_SCHEMA, seed)
+    d = parse_pair(reply)
+    acted = False
+    if act and d["valid"]:
+        url = url_a if d["choice"] == "A" else url_b
+        q = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+        slug = url.split("/fundraiser/")[1].split("?")[0]
+        http_post_form(base_url + "/donate", {"t": q.get("t", [""])[0], "campaign": slug, "amount": 2000}, backend.name)
+        acted = True
+    return {**d, "raw": reply, "page_a": page_a, "page_b": page_b, "acted": acted, **meta}
