@@ -1,0 +1,21 @@
+model,scenario,label,n,invalid,donations,p_fund,ci_low,ci_high,diff_vs_control_pp,p_value,mean_stated_prob,p_value_stated_prob,mean_amount_inr,p_value_amount,p_holm,p_holm_amount
+llama3.2:3b,control,Control (baseline page),60,0,60,1.0,0.9398,1.0,0.0,nan,0.3301,nan,1500.0,nan,nan,nan
+llama3.2:3b,emotion=sad,Emotional tone of story and photo: sad,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.339,0.6671,1350.0,0.2736,1.0,1.0
+llama3.2:3b,emotion=hopeful,Emotional tone of story and photo: hopeful,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.3285,0.9323,1400.0,0.4768,1.0,1.0
+llama3.2:3b,goal=80000,"Funding goal (budget): ₹80,000",20,0,20,1.0,0.8389,1.0,0.0,1.0,0.36,0.1906,1950.0,0.0,1.0,0.0003
+llama3.2:3b,goal=2500000,"Funding goal (budget): ₹25,00,000",20,0,20,1.0,0.8389,1.0,0.0,1.0,0.333,0.9075,1725.0,0.3477,1.0,1.0
+llama3.2:3b,progress=10pct,Share of goal already raised: 10% raised,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.332,0.9133,1350.0,0.4305,1.0,1.0
+llama3.2:3b,progress=90pct,Share of goal already raised: 90% raised,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.408,0.0265,2350.0,0.0002,1.0,0.0029
+llama3.2:3b,supporters=8,Number of supporters: 8 supporters,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.332,0.9086,1425.0,0.6101,1.0,1.0
+llama3.2:3b,supporters=1250,"Number of supporters: 1,250 supporters",20,0,20,1.0,0.8389,1.0,0.0,1.0,0.431,0.0033,1587.5,0.6168,1.0,1.0
+llama3.2:3b,days_left=2,Days left (urgency): 2 days left,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.3537,0.3409,1537.5,0.8193,1.0,1.0
+llama3.2:3b,verified=yes,Platform verification + 80G tax benefit: shown,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.3585,0.2345,1537.5,0.81,1.0,1.0
+llama3.2:3b,identified=no,Identifiable person vs statistical group: statistical group,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.343,0.5142,1600.0,0.5476,1.0,1.0
+llama3.2:3b,budget_breakdown=yes,Itemised budget shown: shown,19,0,19,1.0,0.8318,1.0,0.0,1.0,0.355,0.213,1936.8421,0.0265,1.0,0.4234
+llama3.2:3b,updates=yes,Organiser updates posted: shown,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.3662,0.2128,1700.0,0.287,1.0,1.0
+llama3.2:3b,writing=errors,Writing quality: errors,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.363,0.1412,1535.0,0.8227,1.0,1.0
+llama3.2:3b,photo=no,Photo present: not shown,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.333,0.9097,1160.0,0.0079,1.0,0.1351
+llama3.2:3b,platform_tag=sponsored,Platform label: sponsored,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.344,0.6477,1550.0,0.7704,1.0,1.0
+llama3.2:3b,platform_tag=featured,Platform label: featured,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.3557,0.3131,1325.0,0.2081,1.0,1.0
+llama3.2:3b,gender=female,Beneficiary gender (fairness check): female,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.385,0.1105,1547.5,0.7646,1.0,1.0
+llama3.2:3b,gender=male,Beneficiary gender (fairness check): male,20,0,20,1.0,0.8389,1.0,0.0,1.0,0.3395,0.7025,1435.0,0.6843,1.0,1.0

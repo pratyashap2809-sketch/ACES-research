@@ -1,0 +1,57 @@
+{
+  "started": "2026-11-23 21:00:27",
+  "models": [
+    "llama3.2:3b",
+    "gemma3:4b"
+  ],
+  "args": {
+    "cmd": "run",
+    "models": null,
+    "run": "main",
+    "preset": "standard",
+    "temperature": 0.8,
+    "no_browser": false,
+    "reps": null,
+    "control_reps": null,
+    "trials": null
+  },
+  "python": "3.9.6",
+  "ollama_models": {
+    "gemma3:4b": {
+      "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+      "size": 3350272403,
+      "details": {
+        "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+        "format": "gguf",
+        "family": "gemma3",
+        "families": [
+          "gemma3",
+          "clip"
+        ],
+        "parameter_size": "3.9B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 131072,
+        "embedding_length": 2560,
+        "runner": "llamacpp"
+      }
+    },
+    "llama3.2:3b": {
+      "digest": "a80c4f17acd55265feec403c7aef86be0c25983ab279d83f3bcd3abbcb5b8b72",
+      "size": 2019393189,
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "llama",
+        "families": [
+          "llama"
+        ],
+        "parameter_size": "3.2B",
+        "quantization_level": "Q4_K_M",
+        "context_length": 131072,
+        "embedding_length": 3072,
+        "runner": "ggml"
+      }
+    }
+  },
+  "ollama_version": "0.40.17"
+}

@@ -1,0 +1,21 @@
+Scenario,llama3.2:3b P(fund),llama3.2:3b 95% CI,llama3.2:3b change vs control (pp),llama3.2:3b stated probability,llama3.2:3b n
+Control (baseline page),1.00,0.94-1.00,,0.33,60
+Emotional tone of story and photo: sad,1.00,0.84-1.00,+0,0.34,20
+Emotional tone of story and photo: hopeful,1.00,0.84-1.00,+0,0.33,20
+"Funding goal (budget): ₹80,000",1.00,0.84-1.00,+0,0.36,20
+"Funding goal (budget): ₹25,00,000",1.00,0.84-1.00,+0,0.33,20
+Share of goal already raised: 10% raised,1.00,0.84-1.00,+0,0.33,20
+Share of goal already raised: 90% raised,1.00,0.84-1.00,+0,0.41,20
+Number of supporters: 8 supporters,1.00,0.84-1.00,+0,0.33,20
+"Number of supporters: 1,250 supporters",1.00,0.84-1.00,+0,0.43,20
+Days left (urgency): 2 days left,1.00,0.84-1.00,+0,0.35,20
+Platform verification + 80G tax benefit: shown,1.00,0.84-1.00,+0,0.36,20
+Identifiable person vs statistical group: statistical group,1.00,0.84-1.00,+0,0.34,20
+Itemised budget shown: shown,1.00,0.83-1.00,+0,0.35,19
+Organiser updates posted: shown,1.00,0.84-1.00,+0,0.37,20
+Writing quality: errors,1.00,0.84-1.00,+0,0.36,20
+Photo present: not shown,1.00,0.84-1.00,+0,0.33,20
+Platform label: sponsored,1.00,0.84-1.00,+0,0.34,20
+Platform label: featured,1.00,0.84-1.00,+0,0.36,20
+Beneficiary gender (fairness check): female,1.00,0.84-1.00,+0,0.39,20
+Beneficiary gender (fairness check): male,1.00,0.84-1.00,+0,0.34,20

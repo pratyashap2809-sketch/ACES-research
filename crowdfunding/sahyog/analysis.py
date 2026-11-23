@@ -146,11 +146,12 @@ def analyse_exp1(rows):
             pc = kc / nc if nc else float("nan")
             pval = two_prop_test(kk, n, kc, nc) if k != "control" else float("nan")
             p_prob = welch_p(probs, [r.get("probability") for r in ctrl]) if k != "control" else float("nan")
+            p_amt = welch_p(amts, [r.get("amount", 0) for r in ctrl]) if k != "control" else float("nan")
             block.append({"model": m, "scenario": k, "label": labels[k], "n": n, "invalid": n_all - n,
                           "donations": kk, "p_fund": p, "ci_low": lo, "ci_high": hi,
                           "diff_vs_control_pp": (p - pc) * 100 if k != "control" else 0.0,
                           "p_value": pval, "mean_stated_prob": pm, "p_value_stated_prob": p_prob,
-                          "mean_amount_inr": am})
+                          "mean_amount_inr": am, "p_value_amount": p_amt})
             for sid in content.STORY_IDS:
                 gs = [r for r in g if r["story"] == sid]
                 cs = [r for r in ctrl if r["story"] == sid]
@@ -160,8 +161,10 @@ def analyse_exp1(rows):
                     by_story.append({"model": m, "scenario": k, "story": sid, "n": len(gs), "p_fund": ps,
                                      "diff_vs_control_pp": (ps - pcs) * 100 if k != "control" else 0.0})
         adj = holm([b["p_value"] for b in block])
-        for b, a in zip(block, adj):
+        adj_amt = holm([b["p_value_amount"] for b in block])
+        for b, a, aa in zip(block, adj, adj_amt):
             b["p_holm"] = a
+            b["p_holm_amount"] = aa
         out.extend(block)
     return out, by_story, models
 
@@ -308,6 +311,9 @@ def analyse_exp2(rows):
             z = b / s if s > 0 else float("nan")
             coefs.append({"model": m, "feature": k, "label": lab, "coef": b, "se": s,
                           "odds_ratio": math.exp(b), "p_value": norm_p(z) if z == z else float("nan")})
+        mine = [c for c in coefs if c["model"] == m]
+        for c, a in zip(mine, holm([c["p_value"] for c in mine])):
+            c["p_holm"] = a
         meta.append({"model": m, "n": len(valid), "invalid": len(mr) - len(valid),
                      "pseudo_r2": 1 - ll / ll0 if ll0 else float("nan")})
     return coefs, positions, meta
@@ -450,11 +456,13 @@ def build_report(run_dir):
         write_csv(os.path.join(run_dir, "results_table.csv"), ptab)
         files += ["results_table.csv", "exp1_summary.csv", "exp1_by_story.csv"]
         cols = ["model", "label", "n", "p_fund", "ci_low", "ci_high", "diff_vs_control_pp", "p_holm",
-                "mean_stated_prob", "mean_amount_inr", "invalid"]
+                "mean_stated_prob", "mean_amount_inr", "p_holm_amount", "invalid"]
         pretty = [{**s, **{k: fmt(s[k]) for k in ("p_fund", "ci_low", "ci_high", "mean_stated_prob")},
                    "diff_vs_control_pp": "" if s["scenario"] == "control" else f"{s['diff_vs_control_pp']:+.1f}",
                    "p_holm": "" if s["scenario"] == "control" else fmt(s["p_holm"], 3) + " " + stars(s["p_holm"]),
-                   "mean_amount_inr": fmt(s["mean_amount_inr"], 0)} for s in summary]
+                   "mean_amount_inr": fmt(s["mean_amount_inr"], 0),
+                   "p_holm_amount": "" if s["scenario"] == "control" else fmt(s["p_holm_amount"], 3) + " " + stars(s["p_holm_amount"])}
+                  for s in summary]
         sections.append(f"""<h2>Experiment 1 · Probability of funding under each scenario</h2>
 <p>The agent opens two fundraisers and can fund only one: the target, with ONE thing changed from the control page,
 and a rival story left unchanged. P(fund) = share of choices where the target won. The control row (both pages
@@ -473,14 +481,15 @@ across all scenarios (* p&lt;0.05, ** p&lt;0.01, *** p&lt;0.001).</p>
         files += ["exp2_coefficients.csv", "exp2_position.csv"]
         models2 = [x["model"] for x in meta]
         pc = [{**c, "coef": fmt(c["coef"]), "se": fmt(c["se"]), "odds_ratio": fmt(c["odds_ratio"]),
-               "p_value": fmt(c["p_value"], 3) + " " + stars(c["p_value"])} for c in coefs]
+               "p_value": fmt(c["p_value"], 3), "p_holm": fmt(c.get("p_holm", float("nan")), 3) + " " + stars(c.get("p_holm", float("nan")))}
+              for c in coefs]
         pp = [{**p, "share": fmt(p["share"]), "ci_low": fmt(p["ci_low"]), "ci_high": fmt(p["ci_high"])} for p in positions]
         sections.append(f"""<h2>Experiment 2 · Which fundraiser does the agent pick from four?</h2>
 <p>Every attribute and position was randomized independently, so each coefficient is the causal effect of that
 attribute on being chosen, holding the others fixed (conditional logit; positive = more likely to be chosen).</p>
 {html_table(meta)}
 {forest_plot(coefs, models2)}
-<h3>Coefficients</h3>{html_table(pc, ["model", "label", "coef", "se", "odds_ratio", "p_value"])}
+<h3>Coefficients</h3>{html_table(pc, ["model", "label", "coef", "se", "odds_ratio", "p_value", "p_holm"])}
 <h3>Choice share by position (1 = top left, 2 = top right, 3 = bottom left, 4 = bottom right)</h3>{html_table(pp)}""")
     warn = ('<p class="warn">This report was built from the STUB test model. The numbers are fake and only show that '
             'the pipeline works. Run with real models before using any result.</p>' if stub else "")

@@ -1,0 +1,45 @@
+model,feature,label,coef,se,odds_ratio,p_value,p_holm
+llama3.2:3b,pos2,Position 2 (top right),-1.8479,0.3537,0.1576,0.0,0.0
+llama3.2:3b,pos3,Position 3 (bottom left),-1.8249,0.3537,0.1612,0.0,0.0
+llama3.2:3b,pos4,Position 4 (bottom right),-1.4913,0.3174,0.2251,0.0,0.0001
+llama3.2:3b,sad,Sad tone (vs neutral),-0.0342,0.3382,0.9664,0.9194,1.0
+llama3.2:3b,hopeful,Hopeful tone (vs neutral),-0.1482,0.361,0.8622,0.6814,1.0
+llama3.2:3b,goal_small,"Goal ₹80,000 (vs ₹3 lakh)",-0.1737,0.3464,0.8406,0.6162,1.0
+llama3.2:3b,goal_large,Goal ₹25 lakh (vs ₹3 lakh),-0.1495,0.35,0.8612,0.6694,1.0
+llama3.2:3b,prog10,10% raised (vs 40%),0.1172,0.3568,1.1243,0.7425,1.0
+llama3.2:3b,prog90,90% raised (vs 40%),0.0742,0.3682,1.077,0.8404,1.0
+llama3.2:3b,sup8,8 supporters (vs 85),0.0905,0.3745,1.0947,0.8091,1.0
+llama3.2:3b,sup1250,"1,250 supporters (vs 85)",0.8085,0.3569,2.2444,0.0235,0.4468
+llama3.2:3b,urgent,2 days left (vs 21),0.0565,0.3032,1.0581,0.8522,1.0
+llama3.2:3b,verified,Verified + 80G badge,-0.145,0.2796,0.865,0.6041,1.0
+llama3.2:3b,statistical,Statistical group (vs named person),0.3365,0.2891,1.4001,0.2444,1.0
+llama3.2:3b,errors,Spelling errors,0.4014,0.2839,1.4938,0.1574,1.0
+llama3.2:3b,nophoto,No photo,-0.2216,0.3024,0.8012,0.4636,1.0
+llama3.2:3b,sponsored,Sponsored label,-0.2133,0.4056,0.8079,0.599,1.0
+llama3.2:3b,featured,Featured label,-0.2407,0.4281,0.7861,0.5739,1.0
+llama3.2:3b,male,Male beneficiary (vs female),-0.2704,0.3039,0.7631,0.3735,1.0
+llama3.2:3b,st_education,Story: education (vs medical),0.4965,0.357,1.643,0.1643,1.0
+llama3.2:3b,st_flood,Story: flood relief (vs medical),0.3954,0.3745,1.485,0.291,1.0
+llama3.2:3b,st_livelihood,Story: livelihood (vs medical),0.3205,0.3904,1.3778,0.4116,1.0
+gemma3:4b,pos2,Position 2 (top right),-0.5112,0.5601,0.5998,0.3614,1.0
+gemma3:4b,pos3,Position 3 (bottom left),-0.9752,0.5814,0.3771,0.0935,1.0
+gemma3:4b,pos4,Position 4 (bottom right),-4.9076,1.1387,0.0074,0.0,0.0003
+gemma3:4b,sad,Sad tone (vs neutral),0.2776,0.5045,1.32,0.5821,1.0
+gemma3:4b,hopeful,Hopeful tone (vs neutral),-0.0997,0.5857,0.9051,0.8648,1.0
+gemma3:4b,goal_small,"Goal ₹80,000 (vs ₹3 lakh)",-3.181,0.8372,0.0415,0.0001,0.0026
+gemma3:4b,goal_large,Goal ₹25 lakh (vs ₹3 lakh),0.5708,0.5699,1.7696,0.3166,1.0
+gemma3:4b,prog10,10% raised (vs 40%),-1.2857,0.7193,0.2764,0.0739,0.9603
+gemma3:4b,prog90,90% raised (vs 40%),5.3107,1.1101,202.4953,0.0,0.0
+gemma3:4b,sup8,8 supporters (vs 85),-1.2893,0.6352,0.2755,0.0424,0.6233
+gemma3:4b,sup1250,"1,250 supporters (vs 85)",1.8958,0.6869,6.658,0.0058,0.0983
+gemma3:4b,urgent,2 days left (vs 21),0.0716,0.5316,1.0742,0.8929,1.0
+gemma3:4b,verified,Verified + 80G badge,0.5408,0.4426,1.7174,0.2217,1.0
+gemma3:4b,statistical,Statistical group (vs named person),2.8289,0.7288,16.9265,0.0001,0.002
+gemma3:4b,errors,Spelling errors,0.3327,0.4683,1.3947,0.4775,1.0
+gemma3:4b,nophoto,No photo,0.7791,0.5321,2.1794,0.1432,1.0
+gemma3:4b,sponsored,Sponsored label,-1.3226,0.8397,0.2664,0.1152,1.0
+gemma3:4b,featured,Featured label,0.2054,0.6261,1.228,0.7428,1.0
+gemma3:4b,male,Male beneficiary (vs female),-0.5426,0.5117,0.5812,0.289,1.0
+gemma3:4b,st_education,Story: education (vs medical),-1.2937,0.6348,0.2743,0.0416,0.6233
+gemma3:4b,st_flood,Story: flood relief (vs medical),-1.6303,0.662,0.1959,0.0138,0.2206
+gemma3:4b,st_livelihood,Story: livelihood (vs medical),-5.3392,1.3079,0.0048,0.0,0.0009

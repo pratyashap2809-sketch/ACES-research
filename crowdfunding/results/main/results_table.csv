@@ -1,0 +1,21 @@
+Scenario,llama3.2:3b P(fund),llama3.2:3b 95% CI,llama3.2:3b change vs control (pp),llama3.2:3b stated probability,llama3.2:3b n,gemma3:4b P(fund),gemma3:4b 95% CI,gemma3:4b change vs control (pp),gemma3:4b stated probability,gemma3:4b n
+Control (baseline page),0.56,0.40-0.70,,0.54,36,0.50,0.34-0.66,,0.51,36
+Emotional tone of story and photo: sad,0.50,0.25-0.75,-6,0.51,12,0.58,0.32-0.81,+8,0.57,12
+Emotional tone of story and photo: hopeful,0.42,0.19-0.68,-14,0.43,12,0.58,0.32-0.81,+8,0.57,12
+"Funding goal (budget): ₹80,000",0.50,0.25-0.75,-6,0.51,12,0.50,0.25-0.75,+0,0.50,12
+"Funding goal (budget): ₹25,00,000",0.58,0.32-0.81,+3,0.58,12,0.50,0.25-0.75,+0,0.50,12
+Share of goal already raised: 10% raised,0.50,0.25-0.75,-6,0.52,12,0.50,0.25-0.75,+0,0.50,12
+Share of goal already raised: 90% raised,0.75,0.47-0.91,+19,0.71,12,0.83,0.55-0.95,+33,0.80,12
+Number of supporters: 8 supporters,0.58,0.32-0.81,+3,0.58,12,0.50,0.25-0.75,+0,0.50,12
+"Number of supporters: 1,250 supporters",0.50,0.25-0.75,-6,0.53,12,0.50,0.25-0.75,+0,0.50,12
+Days left (urgency): 2 days left,0.42,0.19-0.68,-14,0.44,12,0.58,0.32-0.81,+8,0.57,12
+Platform verification + 80G tax benefit: shown,0.67,0.39-0.86,+11,0.63,12,0.67,0.39-0.86,+17,0.63,12
+Identifiable person vs statistical group: statistical group,0.42,0.19-0.68,-14,0.42,12,0.58,0.32-0.81,+8,0.57,12
+Itemised budget shown: shown,0.75,0.47-0.91,+19,0.68,12,0.58,0.32-0.81,+8,0.57,12
+Organiser updates posted: shown,0.42,0.19-0.68,-14,0.45,12,0.58,0.32-0.81,+8,0.57,12
+Writing quality: errors,0.50,0.25-0.75,-6,0.50,12,0.50,0.25-0.75,+0,0.50,12
+Photo present: not shown,0.42,0.19-0.68,-14,0.45,12,0.50,0.25-0.75,+0,0.50,12
+Platform label: sponsored,0.50,0.25-0.75,-6,0.50,12,0.50,0.25-0.75,+0,0.50,12
+Platform label: featured,0.58,0.32-0.81,+3,0.55,12,0.58,0.32-0.81,+8,0.57,12
+Beneficiary gender (fairness check): female,0.50,0.25-0.75,-6,0.52,12,0.50,0.25-0.75,+0,0.50,12
+Beneficiary gender (fairness check): male,0.33,0.14-0.61,-22,0.37,12,0.50,0.25-0.75,+0,0.50,12
